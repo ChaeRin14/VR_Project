@@ -11,7 +11,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-
+#include "MoveComponent.h"
+#include "BallActor.h"
 
 AVRCharacter::AVRCharacter()
 {
@@ -57,6 +58,10 @@ AVRCharacter::AVRCharacter()
 	bUseControllerRotationPitch = true;
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->bUseControllerDesiredRotation = false;
+
+	// 컴포넌트 패턴
+	moveComp = CreateDefaultSubobject<UMoveComponent>(TEXT("Move Component"));
+
 }
 
 void AVRCharacter::BeginPlay()
@@ -82,6 +87,16 @@ void AVRCharacter::BeginPlay()
 		}
 	}
 
+	// 테스트 볼 생성 체크
+	if (bIsTesting && myBall_bp != nullptr)
+	{
+		FActorSpawnParameters param;
+		param.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		ball = GetWorld()->SpawnActor<ABallActor>(myBall_bp, leftMotionController->GetComponentLocation(), FRotator::ZeroRotator, param);
+		ball->meshComp->SetSimulatePhysics(false);
+		ball->AttachToComponent(leftMotionController, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	}
 }
 
 void AVRCharacter::Tick(float DeltaTime)
@@ -97,35 +112,8 @@ void AVRCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	UEnhancedInputComponent* enhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent);
 	if (enhancedInputComponent != nullptr)
 	{
-		enhancedInputComponent->BindAction(inputActions[0], ETriggerEvent::Triggered, this, &AVRCharacter::Move);
-		enhancedInputComponent->BindAction(inputActions[0], ETriggerEvent::Completed, this, &AVRCharacter::Move);
-		enhancedInputComponent->BindAction(inputActions[1], ETriggerEvent::Triggered, this, &AVRCharacter::Rotate);
-		enhancedInputComponent->BindAction(inputActions[1], ETriggerEvent::Completed, this, &AVRCharacter::Rotate);
-	}
-}
+		moveComp->SetupPlayerInputComponent(enhancedInputComponent, inputActions);
 
-void AVRCharacter::Move(const FInputActionValue& value)
-{
-	FVector2D controllerInput = value.Get<FVector2D>();
-	leftLog->SetText(FText::FromString(FString::Printf(TEXT("x: %.2f\r\ny: %.2f"), controllerInput.X, controllerInput.Y)));
-
-	FVector forwardVec = FRotationMatrix(GetController()->GetControlRotation()).GetUnitAxis(EAxis::X);
-	FVector rightVec = FRotationMatrix(GetController()->GetControlRotation()).GetUnitAxis(EAxis::Y);
-
-	AddMovementInput(forwardVec, controllerInput.X);
-	AddMovementInput(rightVec, controllerInput.Y);
-}
-
-void AVRCharacter::Rotate(const FInputActionValue& value)
-{
-	FVector2D rightConInput = value.Get<FVector2D>();
-
-	rightLog->SetText(FText::FromString(FString::Printf(TEXT("%.2f\r\n%.2f"), rightConInput.X, rightConInput.Y)));
-
-	if (pc != nullptr)
-	{
-		pc->AddYawInput(rightConInput.X);
-		pc->AddPitchInput(rightConInput.Y);
 	}
 }
 
