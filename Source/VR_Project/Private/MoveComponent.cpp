@@ -10,6 +10,7 @@
 #include "DrawDebugHelpers.h"
 #include "BallActor.h"
 #include "Components/CapsuleComponent.h"
+#include "NiagaraDataInterfaceArrayFunctionLibrary.h"
 
 
 UMoveComponent::UMoveComponent()
@@ -34,7 +35,7 @@ void UMoveComponent::BeginPlay()
 			player->ball->meshComp->SetSimulatePhysics(false);
 		}
 		}));
-	
+
 }
 
 
@@ -46,6 +47,7 @@ void UMoveComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	if (bIsShowLine)
 	{
 		DrawTrajectory(throwDirection, throwPower, myMass);
+		//DrawBezierCurve();
 	}
 }
 
@@ -141,15 +143,48 @@ void UMoveComponent::DrawTrajectory(FVector dir, float power, float mass)
 		linePositions.Add(endLoc);
 	}
 
-	for (int i = 0; i < linePositions.Num() - 1; i++)
+	/*for (int i = 0; i < linePositions.Num() - 1; i++)
 	{
 		DrawDebugLine(world, linePositions[i], linePositions[i + 1], FColor::Red, false, 0, 0, 2);
-	}
+	}*/
 
+	UNiagaraDataInterfaceArrayFunctionLibrary::SetNiagaraArrayVector(player->lineFx, FName("PointArray"), linePositions);
 }
 
 void UMoveComponent::DrawBezierCurve()
 {
-	
+	FVector startLoc = player->leftMotionController->GetComponentLocation();
+	FVector relativeDir = player->leftMotionController->GetComponentTransform().TransformVector(throwDirection);
+	FHitResult hitInfo;
+
+	if (GetWorld()->LineTraceSingleByChannel(hitInfo, startLoc, startLoc + relativeDir * throwPower, ECC_Visibility))
+	{
+		float heightDist = FMath::Abs(hitInfo.ImpactPoint.Z - player->leftMotionController->GetComponentLocation().Z);
+
+		FVector point1 = startLoc;
+		FVector point2 = hitInfo.ImpactPoint + FVector::UpVector * heightDist * 1.5f;
+		FVector point3 = hitInfo.ImpactPoint;
+		float alpha = 0;
+		linePositions.Empty();
+
+		for (int32 i = 0; i < 11; i++)
+		{
+			FVector lineStart = FMath::Lerp<FVector>(point1, point2, alpha);
+			FVector lineEnd = FMath::Lerp<FVector>(point2, point3, alpha);
+			FVector	linePoint = FMath::Lerp<FVector>(lineStart, lineEnd, alpha);
+			alpha += 0.1f;
+
+			linePositions.Add(linePoint);
+		}
+
+		for (int32 i = 0; i < linePositions.Num() - 1; i++)
+		{
+			DrawDebugLine(GetWorld(), linePositions[i], linePositions[i+1], FColor::Green, false, 0, 0, 2);
+		}
+	}
+	else
+	{
+
+	}
 }
 

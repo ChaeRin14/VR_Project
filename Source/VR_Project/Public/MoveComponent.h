@@ -37,7 +37,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "MySettings|Movement")
 	float myMass = 1;
 
-	
+	/*UPROPERTY(EditDefaultsOnly, Category = "MySettings|Movement")
+	float alpha = 0;*/
 
 private:
 	class AVRCharacter* player;
@@ -52,4 +53,5 @@ private:
 
 	void DrawTrajectory(FVector dir, float power, float mass);
 	
+	void DrawBezierCurve();
 };

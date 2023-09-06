@@ -50,6 +50,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "MySettings|Components")
 	class UMoveComponent* moveComp;
 
+	UPROPERTY(EditDefaultsOnly, Category = "MySettings|Components")
+	class UNiagaraComponent* lineFx;
+
+
 	UPROPERTY(EditAnywhere, Category="MySettings|Inputs")
 	class UInputMappingContext* imc_VRmap;
 
@@ -61,6 +65,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "MySettings|Movement")
 	bool bIsTesting = true;
+
+	
+
 
 	class APlayerController* pc;
 	class ABallActor* ball;

@@ -13,6 +13,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "MoveComponent.h"
 #include "BallActor.h"
+#include "NiagaraComponent.h"
 
 AVRCharacter::AVRCharacter()
 {
@@ -54,6 +55,9 @@ AVRCharacter::AVRCharacter()
 	rightLog->SetHorizontalAlignment(EHTA_Center);
 	rightLog->SetVerticalAlignment(EVRTA_TextCenter);
 
+	lineFx = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Line Effect"));
+	lineFx->SetupAttachment(RootComponent);
+
 	bUseControllerRotationYaw = true;
 	bUseControllerRotationPitch = true;
 	GetCharacterMovement()->bOrientRotationToMovement = false;
@@ -61,7 +65,6 @@ AVRCharacter::AVRCharacter()
 
 	// 컴포넌트 패턴
 	moveComp = CreateDefaultSubobject<UMoveComponent>(TEXT("Move Component"));
-
 }
 
 void AVRCharacter::BeginPlay()
